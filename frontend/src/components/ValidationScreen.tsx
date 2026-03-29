@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { generatePptx, type ValidationResponse } from "../services/api";
-import { cn } from "../lib/utils";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface ValidationScreenProps {
   report: ValidationResponse;

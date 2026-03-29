@@ -5,7 +5,12 @@ import UploadScreen from "./components/UploadScreen";
 import ValidationScreen from "./components/ValidationScreen";
 import SuccessScreen from "./components/SuccessScreen";
 import LoadingScreen from "./components/LoadingScreen";
-import { cn } from "./lib/utils";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 type AppStep = "login" | "upload" | "loading" | "validate" | "success";
 
