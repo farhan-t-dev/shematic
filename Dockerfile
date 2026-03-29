@@ -23,4 +23,5 @@ COPY --from=build-frontend /app/frontend/dist ./frontend/dist
 EXPOSE 8000
 
 # Run the app
+ENV PYTHONPATH=/app/scripts
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

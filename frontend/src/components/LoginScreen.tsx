@@ -30,38 +30,39 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   return (
     <div className="flex flex-col flex-grow justify-center">
       <div className="mb-10 md:mb-14">
-        <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-4 leading-none">Secure Access.</h2>
+        <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-4 leading-none text-black">Secure Access.</h2>
         <p className="text-gray-400 font-bold text-sm">Internal tools for schematic generation.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">Username</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 ml-1">Username</label>
           <input
             type="text"
             required
-            className="w-full bg-gray-50 border-gray-100 rounded-xl px-4 py-3.5 md:py-4 text-sm focus:bg-white focus:border-black focus:ring-0 transition-all font-bold"
+            spellCheck="false"
+            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3.5 md:py-4 text-sm outline-none focus:bg-white focus:border-black focus:ring-0 transition-all font-bold placeholder:text-gray-300"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
         </div>
         <div className="space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">Password</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 ml-1">Password</label>
           <input
             type="password"
             required
-            className="w-full bg-gray-50 border-gray-100 rounded-xl px-4 py-3.5 md:py-4 text-sm focus:bg-white focus:border-black focus:ring-0 transition-all font-bold"
+            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3.5 md:py-4 text-sm outline-none focus:bg-white focus:border-black focus:ring-0 transition-all font-bold placeholder:text-gray-300"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
         
-        {error && <p className="text-xs font-black text-red-500">{error}</p>}
+        {error && <p className="text-xs font-black text-red-500 ml-1">{error}</p>}
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-black text-white font-black py-4 md:py-5 rounded-xl text-sm hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 mt-4 uppercase tracking-[0.1em]"
+          className="w-full bg-black text-white font-black py-4 md:py-5 rounded-xl text-sm hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 mt-4 uppercase tracking-[0.1em] shadow-lg shadow-gray-100"
         >
           {isLoading ? "Authenticating..." : "Sign in"}
         </button>
