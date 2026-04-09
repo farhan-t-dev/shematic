@@ -117,7 +117,7 @@ const App: React.FC = () => {
 
         <footer className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center text-[9px] uppercase tracking-[0.3em] text-gray-200 font-black shrink-0">
           <span>v2.0</span>
-          <span>&copy; RPS Insurance</span>
+          <span>© 2026</span>
         </footer>
       </div>
     </div>
