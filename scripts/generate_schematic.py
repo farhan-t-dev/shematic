@@ -205,10 +205,10 @@ def build_schematic(excel_path, output_path, account_name_override=None, carrier
     bg.fore_color.rgb = hex_to_rgb("F4F6F9")
 
     # Layout constants
-    CHART_L = 1.62
-    CHART_T = 1.02
-    CHART_W = 10.50
-    CHART_H = 5.72
+    CHART_L = 1.40
+    CHART_T = 1.00
+    CHART_W = 11.50
+    CHART_H = 6.20
 
     # ── Detect parallel layers (same bottom = interceding/side-by-side) ──
     from collections import defaultdict
@@ -344,10 +344,13 @@ def build_schematic(excel_path, output_path, account_name_override=None, carrier
         rule.fill.fore_color.rgb = hex_to_rgb("999999")
         rule.line.fill.background()
 
-        lbl = "$0" if level == 0 else f"${level/1_000_000:,.0f}M"
-        is_bold = level in (0, program_max)
-        add_textbox(0.0, y - 0.20, 1.55, 0.40,
-                    [(lbl, is_bold, "222222", 10 if is_bold else 9)],
+        if level == 0:
+            continue
+
+        lbl = f"${level:,.0f}"
+        is_bold = False
+        add_textbox(0.0, y - 0.20, CHART_L - 0.05, 0.40,
+                    [(lbl, is_bold, "222222", 10)],
                     align=PP_ALIGN.RIGHT, valign="ctr", wrap=False)
 
     # Also add lighter label for sub-tops of parallel layers (e.g. $15M when $20M is dominant)
@@ -361,9 +364,13 @@ def build_schematic(excel_path, output_path, account_name_override=None, carrier
             rule.fill.solid()
             rule.fill.fore_color.rgb = hex_to_rgb("BBBBBB")
             rule.line.fill.background()
-            lbl = f"${level/1_000_000:,.0f}M"
-            add_textbox(0.0, y - 0.18, 1.55, 0.36,
-                        [(lbl, False, "999999", 8)],
+            
+            if level == 0:
+                continue
+
+            lbl = f"${level:,.0f}"
+            add_textbox(0.0, y - 0.18, CHART_L - 0.05, 0.36,
+                        [(lbl, False, "222222", 9)],
                         align=PP_ALIGN.RIGHT, valign="ctr", wrap=False)
 
     # ── 4. Carrier blocks ──
@@ -405,9 +412,8 @@ def build_schematic(excel_path, output_path, account_name_override=None, carrier
             # Label
             name       = carrier["name"]
             pct_val    = carrier["pct"] * 100
-            pct_str    = f"{pct_val:.0f}%" if pct_val == int(pct_val) else f"{pct_val:.1f}%"
-            auth_m     = carrier["auth"] / 1_000_000
-            dol_str    = f"${auth_m:,.1f}M" if auth_m != int(auth_m) else f"${auth_m:,.0f}M"
+            pct_str    = f"{pct_val:.2f}%"
+            dol_str    = f"${carrier['auth']:,.0f}"
 
             if dw < 0.22 or blk_h < 0.22:
                 pass  # too small
@@ -420,52 +426,16 @@ def build_schematic(excel_path, output_path, account_name_override=None, carrier
 
             elif dw < 0.85 or blk_h < 0.50:
                 add_textbox(dx, y_top, dw, blk_h,
-                            [(f"{name}  {pct_str}", True, "FFFFFF", 8)],
+                            [(f"{name}\n{pct_str} ({dol_str})", True, "FFFFFF", 8)],
                             align=PP_ALIGN.CENTER, valign="ctr")
 
             else:
                 add_textbox(dx, y_top, dw, blk_h, [
                     (name,    True,  "FFFFFF",  9),
-                    (pct_str, False, "E0E0E0",  8),
-                    (dol_str, False, "E0E0E0",  8),
+                    (f"{pct_str} ({dol_str})", False, "E0E0E0",  8),
                 ], align=PP_ALIGN.CENTER, valign="ctr")
 
             x_cur += blk_w
-
-        # Right-side layer label — only show for rightmost parallel layer
-        if x_start_frac + x_width_frac >= 0.999:
-            mid_y   = (y_top + y_bot) / 2
-            lbl_txt = layer["label"]
-            lbl_txt = re.sub(r'\$([0-9,]+),000,000', lambda m: f'${int(m.group(1).replace(",",""))}M', lbl_txt)
-            add_textbox(CHART_L + CHART_W + 0.14, mid_y - 0.32,
-                        1.05, 0.64,
-                        [(lbl_txt, False, "444444", 8)],
-                        align=PP_ALIGN.LEFT, valign="ctr")
-
-    # ── 5. Legend ──
-    all_carriers = list(carrier_colors.keys())
-    LEG_Y   = CHART_T + CHART_H + 0.16
-    ITEM_W  = 1.28
-    SW_W    = 0.13
-    SW_H    = 0.13
-    PER_ROW = int(CHART_W / ITEM_W)
-
-    for i, name in enumerate(all_carriers):
-        ci2   = i % PER_ROW
-        ri    = i // PER_ROW
-        lx    = CHART_L + ci2 * ITEM_W
-        ly    = LEG_Y + ri * 0.24
-
-        sw = slide.shapes.add_shape(
-            1, Inches(lx), Inches(ly + 0.05),
-            Inches(SW_W), Inches(SW_H))
-        sw.fill.solid()
-        sw.fill.fore_color.rgb = hex_to_rgb(carrier_colors[name])
-        sw.line.fill.background()
-
-        add_textbox(lx + SW_W + 0.05, ly, ITEM_W - SW_W - 0.07, 0.24,
-                    [(name, False, "333333", 7.5)],
-                    align=PP_ALIGN.LEFT, valign="ctr")
 
     prs.save(output_path)
     print(f"✅ Done → {output_path}")
