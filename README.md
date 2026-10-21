@@ -6,6 +6,17 @@ Live demo: https://shematic.onrender.com
 
 ## Screenshots
 
+<table>
+  <tr>
+    <td><img src="docs/screenshots/input-sheet.png" alt="Fictional sample input workbook" width="420"></td>
+    <td><img src="docs/screenshots/output-slide.png" alt="Generated schematic slide from the sample" width="420"></td>
+  </tr>
+  <tr>
+    <td>Fictional workbook used as input.</td>
+    <td>Slide generated from the clean sample.</td>
+  </tr>
+</table>
+
 ![Upload screen](docs/screenshots/hero.png)
 Upload a workbook and analyze it for program issues.
 
@@ -31,7 +42,7 @@ Client project, shared with permission.
 - Shows blocking flags and warnings in the browser and accepts a schematic title and yes/no answers for carrier-name merges (`frontend/src/components/ValidationScreen.tsx`).
 - Generates a single 13.3 x 7.5 inch presentation slide with layer bands sized by dollar limits, carrier blocks, a dollar y-axis and labels (`scripts/generate_schematic.py`).
 - Requires a shared username and password, returns a bearer token and expires sessions after `SESSION_TTL_SECONDS` (`backend/main.py`).
-- Writes uploads to a temp directory; validation copies are deleted immediately, session copies are deleted after generation, and stale sessions are expired on later requests. The generated deck is streamed from memory (`backend/main.py`).
+- Writes uploads to a temp directory; validation copies are deleted immediately, session copies are deleted after generation, and stale sessions are expired on later requests. A restart does not delete session files already in the temp directory. The generated deck is streamed from memory (`backend/main.py`).
 - Serves the built frontend from FastAPI when `frontend/dist` exists (`backend/main.py`, `Dockerfile`).
 
 ## How it works
@@ -93,7 +104,7 @@ Run the tests:
 python -m unittest discover -s tests -v
 ```
 
-The suite has 8 tests: auth helpers, carrier merges and three pipeline validation paths.
+The suite has 9 tests: auth helpers, carrier merges, three pipeline validation paths and the CLI output file.
 
 ## Configuration
 
@@ -122,12 +133,10 @@ docker run -p 8000:8000 \
 
 ## Status and limits
 
-- The automated suite covers auth helpers, carrier merges and three pipeline validation paths. `tests/verify_formatting.py` is a separate manual render script, and there are no browser tests.
+- The automated suite covers auth helpers, carrier merges, three pipeline validation paths and the CLI output file. `tests/verify_formatting.py` is a separate manual render script, and there are no browser tests.
 - The parser reads only the active worksheet.
-- The CLI entry point in `scripts/run_pipeline.py` does not write the output file for a clean input: it validates and renders in memory, then prints a success message. The web API does return the deck.
 - W05 is defined in `scripts/validate.py` but does not surface through `run_pipeline`: carriers with an authorization amount and zero participation are filtered out before validation.
-- Sessions and uploads are held in process memory; a restart clears them.
-- `npm run lint` currently reports two errors in `frontend/src/App.tsx`: an unused `cn` helper and an empty catch block.
+- Sessions and uploads are held in process memory; a restart clears them. A restart does not delete session files already written to the temp directory, and there is no startup sweep.
 
 ## Author
 
