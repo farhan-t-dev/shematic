@@ -30,18 +30,22 @@ the validator (W03) should have prompted the user for the real name.
 
 | Property | Value |
 |----------|-------|
-| Left edge | 1.62" |
-| Top edge | 1.02" |
-| Width | 10.50" |
-| Height | 5.72" |
+| Left edge | 1.40" |
+| Top edge | 1.00" |
+| Width | 11.50" |
+| Height | 6.20" |
 | Background | White (#FFFFFF) |
 | Border | #BBBBBB, 0.5pt |
+
+The four dimensions are `CHART_L`, `CHART_T`, `CHART_W` and `CHART_H` in
+`scripts/generate_schematic.py:208-211`. The chart rectangle is drawn from them at
+`scripts/generate_schematic.py:320`.
 
 ---
 
 ## Y-Axis
 
-- Labels sit LEFT of chart, right-aligned, in column x=0.0" w=1.55"
+- Labels sit LEFT of chart, right-aligned, in column x=0.0" w=1.35" (`CHART_L - 0.05`, `scripts/generate_schematic.py:352`)
 - Only show labels at true layer boundaries (bottom and top of each layer)
 - Dominant boundaries (tallest layer at each attachment): 9pt, #222222
 - Sub-boundaries from parallel/interceding layers: 8pt, #999999, lighter rule
