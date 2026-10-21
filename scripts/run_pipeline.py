@@ -179,7 +179,17 @@ if __name__ == "__main__":
             print("Cancelled. Fix the file and try again.")
             sys.exit(0)
         # Re-run with confirmed warnings
-        result = run_pipeline(excel_path, output_path=output_path, confirmed_warnings=True)
+        result = run_pipeline(excel_path, output_path=None, confirmed_warnings=True)
 
-    if result["status"] == "ok":
-        print(f"\n✅ Schematic saved to: {output_path}")
+    if result["status"] != "ok":
+        print(result["report"])
+        sys.exit(1)
+
+    try:
+        with open(output_path, "wb") as handle:
+            handle.write(result["pptx_bytes"])
+    except OSError as error:
+        print(f"Could not write {output_path}: {error}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"\nSchematic saved to: {output_path}")
