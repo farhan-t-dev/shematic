@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -76,6 +77,32 @@ class PipelineTests(unittest.TestCase):
         result = run_pipeline(path, render=False)
         self.assertEqual(result["status"], "blocked")
         self.assertEqual(result["flags"][0]["id"], "B06")
+
+    def test_cli_writes_output_file_for_clean_input(self):
+        path = self.track(
+            create_fixture(
+                "Sunrise Properties",
+                [("$10,000,000 Primary", [("Carrier A", 10000000, 1.0)])],
+            )
+        )
+        with tempfile.TemporaryDirectory() as output_dir:
+            output_path = os.path.join(output_dir, "schematic.pptx")
+            process = subprocess.run(
+                [
+                    sys.executable,
+                    os.path.join(ROOT_DIR, "scripts", "run_pipeline.py"),
+                    path,
+                    output_path,
+                ],
+                capture_output=True,
+                text=True,
+                cwd=ROOT_DIR,
+            )
+
+            self.assertEqual(process.returncode, 0, process.stderr)
+            self.assertTrue(os.path.exists(output_path))
+            with open(output_path, "rb") as handle:
+                self.assertEqual(handle.read(2), b"PK")
 
 
 if __name__ == "__main__":

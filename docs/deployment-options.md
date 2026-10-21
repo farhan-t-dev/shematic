@@ -13,7 +13,7 @@ This is the recommended path for end-users. It provides a password-protected web
 - **Backend**: FastAPI (Python 3.11)
 - **Frontend**: React + Vite single-page app
 - **Container**: Docker (Debian-slim)
-- **Data Policy**: Temporary upload storage only for the active session, then cleanup.
+- **Data Policy**: Uploads are written to the system temp directory for the active session and deleted after generation or expiry. See Data Privacy Considerations for the exact paths and the cases where a file can remain.
 
 ### How to Run Locally (Docker)
 1. Ensure Docker is installed.
@@ -77,20 +77,63 @@ Week 3:  Decide whether to keep hosted externally or move to firm-managed infras
 
 ## Data Privacy Considerations
 
-The core privacy guarantee of this tool:
+This section describes what `backend/main.py` does with uploaded files. It is not a
+claim that files are never written to disk.
 
-1. **Files are never stored.** The Excel is read into memory, processed, and discarded.
-2. **Uploaded files are temporary.** They are held only long enough to validate and generate the download, then removed.
-3. **Output is never persisted.** The PPTX is generated in memory and streamed back to the user.
-4. **No logging of file contents.** Only operational metadata should be logged if needed.
-5. **User auth doesn't touch file contents.** Auth and processing stay separate.
+### When files are written
 
-This means the tool can honestly be described as:
-> "Your spreadsheet is only kept temporarily for validation and generation, then removed.
-> The generated PowerPoint is returned directly to you and is not stored permanently."
+1. **Validation copy.** `POST /api/validate` writes the upload to
+   `UPLOAD_DIR/validate-<uuid>.xlsx`, where `UPLOAD_DIR` is
+   `tempfile.gettempdir()/schematic_uploads` (`backend/main.py:52`). The copy is
+   needed because `run_pipeline` takes a file path (`backend/main.py:167-170`).
+2. **Session copy.** If validation is not blocked, the same bytes are written again
+   to `UPLOAD_DIR/<uuid>.xlsx` and tracked in the in-memory `upload_sessions` map
+   (`backend/main.py:85-97, 185-186`). Blocked uploads do not get a session copy.
 
-That should be sufficient for most brokerage compliance requirements — but confirm
-with the firm's compliance team before going live.
+### When files are deleted
+
+1. **Validation copy** is removed in a `finally` block immediately after validation,
+   including when validation raises (`backend/main.py:172-176`).
+2. **Session copy** is removed in a `finally` block at the end of `POST /api/generate`,
+   including when generation returns an error such as a missing title or an
+   unanswered carrier merge (`backend/main.py:219-221`).
+3. **Expired session copies** are removed by `_cleanup_expired_state`, which runs on
+   login, validate, generate and authenticated requests (`backend/main.py:67-82`).
+   Expiry uses `UPLOAD_TTL_SECONDS`, default 1800 seconds (`backend/main.py:27`).
+   Cleanup is lazy: it runs on the next request, not on a timer.
+
+### Paths that can leave files behind
+
+1. **Restart or process kill.** `upload_sessions` is in memory only. After a restart
+   the map is empty, so files written before the restart are no longer tracked and are
+   never deleted by the application. There is no startup sweep of `UPLOAD_DIR`.
+2. **Kill before a `finally` block runs.** If the process is killed during validation
+   or generation, the cleanup block does not run, so the validation copy or the
+   session copy remains.
+3. **Write failure in `_create_upload_session`.** The write at
+   `backend/main.py:88-89` has no cleanup around it, so a failed write can leave a
+   partial file.
+
+Files left by the first two paths stay in the system temp directory until the
+operating system or an operator removes them.
+
+### What is not written
+
+- **Output deck.** `POST /api/generate` renders to an in-memory `BytesIO` and streams
+  it back (`backend/main.py:212-218`; `scripts/run_pipeline.py:145-156`). The API
+  never writes a `.pptx` to disk.
+- **Auth state.** Bearer tokens and expiry times are held in the `auth_sessions`
+  dictionary only (`backend/main.py:50, 144-146`).
+- **File contents in logs.** The application does not log file contents. Uvicorn
+  access logs record request lines such as method, path and status, not request bodies.
+
+This means the tool can be described as:
+> "Your spreadsheet is written to the server's temporary directory for validation and generation.
+> It is deleted after generation or after the upload window expires.
+> If the server restarts before that cleanup, the temporary copy can remain in the system temp directory.
+> The generated PowerPoint is streamed back to you and is not written to disk."
+
+Confirm this description with the firm's compliance team before going live.
 
 ---
 
