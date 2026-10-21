@@ -43,9 +43,14 @@ frontend/node_modules/
 .DS_Store
 Thumbs.db
 
+# Local tooling
+.playwright-mcp/
+
 # Temporary uploads
 /tmp/
 schematic_uploads/
 *.xlsx
 *.pptx
 !docs/*.md
+!docs/sample/*.xlsx
+!docs/sample/*.pptx
