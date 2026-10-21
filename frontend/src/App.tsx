@@ -5,12 +5,6 @@ import UploadScreen from "./components/UploadScreen";
 import ValidationScreen from "./components/ValidationScreen";
 import SuccessScreen from "./components/SuccessScreen";
 import LoadingScreen from "./components/LoadingScreen";
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 type AppStep = "login" | "upload" | "loading" | "validate" | "success";
 
@@ -59,7 +53,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    try { await logout(); } catch (e) {}
+    try { await logout(); } catch { /* local session is cleared below */ }
     localStorage.removeItem("auth-token");
     handleReset();
     setStep("login");
